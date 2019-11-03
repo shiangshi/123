@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+	body {
+	  font-family: Monospace;
+	  background-color: #000;
+	  color: #fff;
+	  margin: 0px;
+	  overflow: hidden;
+	}
+
+	#info {
+	  color: #fff;
+	  position: absolute;
+	  top: 10px;
+	  width: 100%;
+	  text-align: center;
+	  z-index: 100;
+	  display: block;
+	}
+
+	#info a,
+	.button {
+	  color: #f00;
+	  font-weight: bold;
+	  text-decoration: underline;
+	  cursor: pointer
+	}
+
+
+</style>
+</head>
+
+<body> 
+
+
+	<script src="https://threejs.org/build/three.min.js"></script>
+	<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+	</script>
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<!--script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/DDSLoader.js"></script-->
+	<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/MTLLoader.js"></script>
+	<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/OBJLoader.js"></script>
+	<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+
+
+	
+<script>
+var camera,topCamera, scene, renderer;
+var modelName;
+var theModel;
+var keyboard = new KeyboardState();
+var pos = new THREE.Vector3();
+var speed, angle, vel,clock;
+var getmodel;
+var toycar = new THREE.Object3D();
+
+
+(function() {
+  Math.clamp = function(val,min,max){
+    return Math.min(Math.max(val,min),max);
+    
+  }})();
+
+init();
+animate();
+
+
+function loadCubemap() {
+
+  var path = "image/";
+  var format = '.jpg';
+  var urls = [
+    path + 'px' + format, path + 'nx' + format,
+    path + 'py' + format, path + 'ny' + format,
+    path + 'pz' + format, path + 'nz' + format
+  ];
+  var loader = new THREE.CubeTextureLoader();
+  loader.setCrossOrigin ('');
+  var cubeMap = loader.load(urls);
+  cubeMap.format = THREE.RGBFormat;
+  return cubeMap;
+  
+}
+
+
+
+function init() {
+
+  scene = new THREE.Scene();
+  clock = new THREE.Clock();
+
+  
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor (0x888888);
+  document.body.appendChild(renderer.domElement);
+
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000);
+  camera.position.x = 0;
+  camera.position.y = 20;
+  camera.position.z = -30;
+  camera.lookAt(0,0,0);
+  
+  
+  topCamera = new THREE.OrthographicCamera (-110,110,110,-110, 10, 2000);
+  topCamera.position.set (0,40,0);
+  topCamera.up.set (0,1,1);
+  topCamera.lookAt (new THREE.Vector3(0,0,0));
+  
+  gridxz = new THREE.GridHelper (200, 20,'red','black');
+  scene.add (gridxz);
+  
+  var ambient = new THREE.AmbientLight(0x444444);
+  scene.add(ambient);
+
+  let axis = new THREE.AxesHelper (20);
+  	
+  var directionalLight = new THREE.DirectionalLight(0xffffff);
+  directionalLight.position.set(0, 0, 1).normalize();
+  scene.add(directionalLight);
+
+  var pointLight = new THREE.PointLight (0xffffff);
+  pointLight.position.set (100,200,-100);
+  scene.add (pointLight);
+  
+  var cubemap = loadCubemap();
+  scene.background = cubemap;
+  
+  
+  readModel ('toycar');
+   
+  toycar.add(camera);
+  toycar.add(topCamera);
+  
+  scene.add(toycar);
+
+
+  speed = 5.0;
+  angle = 0.0;
+  
+  window.addEventListener('resize', onWindowResize, false);
+  
+  
+  ///////////////////////////////////////////////////////////////////	
+	function onWindowResize() {
+
+	  camera.aspect = window.innerWidth / window.innerHeight;
+	  camera.updateProjectionMatrix();
+
+	  renderer.setSize(window.innerWidth, window.innerHeight);
+
+	}
+  
+}
+
+function readModel (modelName, targetSize=40) {
+
+  var onProgress = function(xhr) {
+    if (xhr.lengthComputable) {
+      var percentComplete = xhr.loaded / xhr.total * 100;
+    }
+  };
+
+  var onError = function(xhr) {};
+
+  var mtlLoader = new THREE.MTLLoader();
+  mtlLoader.setPath('models/');
+  mtlLoader.load(modelName+'.mtl', function(materials) {
+
+    materials.preload();
+
+    var objLoader = new THREE.OBJLoader();
+    objLoader.setMaterials(materials);
+    objLoader.setPath('models/');
+    objLoader.load(modelName+'.obj', function(object) {
+		
+		let theObject =  unitize (object, targetSize);
+		theObject.name = 'toycar'
+		scene.add (theObject);
+		theObject.position.set(0,5,0);
+		
+		model = theObject;
+		toycar.add(model);
+    }, onProgress, onError);
+
+  });
+
+}
+
+
+function unitize (object, targetSize) {  
+	
+	// find bounding box of 'object'
+	var box3 = new THREE.Box3();
+	box3.setFromObject (object);
+	var size = new THREE.Vector3();
+	size.subVectors (box3.max, box3.min);
+	var center = new THREE.Vector3();
+	center.addVectors(box3.max, box3.min).multiplyScalar (0.5);
+	
+	// uniform scaling according to objSize
+	var objSize = Math.max (size.x, size.y, size.z);
+	var scaleSet = targetSize/objSize;
+				
+	var theObject =  new THREE.Object3D();
+	theObject.add (object);
+	object.scale.set (scaleSet, scaleSet, scaleSet);
+	object.position.set (-center.x*scaleSet, -center.y*scaleSet, -center.z*scaleSet);
+	
+	return theObject;
+			
+}
+function move(dt){
+
+	 keyboard.update();
+	if ( keyboard.pressed("left") ) 
+		angle += 0.01;               
+	if ( keyboard.pressed("right") )
+		angle -= 0.01;               
+	if ( keyboard.pressed("up") )  
+		speed += 0.5;        
+	if ( keyboard.pressed("down") )  
+		speed -= 0.5;    
+
+	speed = Math.clamp(speed, 0, 20.0);		
+	vel = new THREE.Vector3(0,0,speed);
+	
+	vel.applyAxisAngle (new THREE.Vector3(0,1,0), angle);
+	pos.add (vel.clone().multiplyScalar(dt)); 	
+}
+
+
+function animate() {
+
+  
+  var dt = clock.getDelta();
+  
+  move(dt);
+  
+  toycar.position.copy(pos);
+  toycar.rotation.y = angle;
+  
+
+  requestAnimationFrame(animate);
+  render();
+
+}
+
+function render() {
+
+ var SCREEN_W, SCREEN_H;
+ SCREEN_W = window.innerWidth;
+ SCREEN_H = window.innerHeight;
+
+ var left,bottom,width,height;
+
+ left = 1; bottom = 1; width = 0.5*SCREEN_W-2; height = SCREEN_H-2;
+ renderer.setViewport (left,bottom,width,height);
+ renderer.setScissor(left,bottom,width,height);
+ renderer.setScissorTest (true);
+ camera.aspect = width/height;
+ camera.updateProjectionMatrix();
+ renderer.render (scene,camera);
+ 
+ left = 0.5*SCREEN_W+1; bottom = 1; width = 0.5*SCREEN_W-2; height = SCREEN_H-2;
+ renderer.setViewport (left,bottom,width,height);
+ renderer.setScissor(left,bottom,width,height);
+ renderer.setScissorTest (true);
+ topCamera.aspect = width/height;
+ topCamera.updateProjectionMatrix();
+ renderer.render (scene,topCamera);
+
+}
+
+
+</script>
+</body>
+
+</html>
