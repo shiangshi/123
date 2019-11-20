@@ -20,13 +20,13 @@
 <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
 <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
 
-<script src="https://threejs.org/build/three.min.js"></script>
-<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
-</script>
-<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<!--script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/DDSLoader.js"></script-->
-<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/MTLLoader.js"></script>
-<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/OBJLoader.js"></script>
+	<script src="https://threejs.org/build/three.min.js"></script>
+	<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+	</script>
+	<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+	<!--script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/DDSLoader.js"></script-->
+	<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/MTLLoader.js"></script>
+	<script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/loaders/OBJLoader.js"></script>
 
 	
 <script>
@@ -64,14 +64,14 @@ function init() {
 	 
 	controls = new THREE.OrbitControls(camera, renderer.domElement);
 	//燈光
-	topLight = new THREE.SpotLight( 0xffffff,0.8);
-	topLight.position.set( 0, 150, 0 );
+	topLight = new THREE.AmbientLight( 0x333333);
+	topLight.position.x = 0;
+    topLight.position.y = 100;
+    topLight.position.z = 0;
 	topLight.target = getChair;
 	scene.add( topLight );
 	
 	topLight.castShadow = true;
-    topLight.shadow.mapSize.width = 200;
-    topLight.shadow.mapSize.height = 200;
 	topLight.intensity = 0;
 	
 	//按鈕
@@ -151,7 +151,7 @@ function init() {
     floor.rotation.x = -Math.PI / 2;
     scene.add(floor);
 	
-	light = new THREE.SpotLight(0xffffff, 1.5);
+	light = new THREE.SpotLight(0xffffff, 0.5);
     light.position.set(20, 50, 18);
     light.angle = Math.PI/3;
     light.penumbra = 0.5
@@ -209,11 +209,16 @@ function buildParts() {
     var table0 = new THREE.Mesh (new THREE.BoxGeometry (10,50,100),mat);  
 	base0.add(table0);
     parts.push (table0);
+	table0.castShadow = true;
+    table0.receiveShadow = true;
     
 	var base1 = new THREE.Object3D();
 	var table1 = new THREE.Mesh (new THREE.BoxGeometry (10,50,100),mat); 
 	base1.add(table0);	
     parts.push (table1);
+	
+	table1.castShadow = true;
+    table1.receiveShadow = true;
 	
 
     return parts;
