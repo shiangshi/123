@@ -143,6 +143,7 @@ var sceneRTT, cameraRTT;
 var renderTarget;
 var planeXX;
 var angle = 0, pointLight;
+var subject;
 
 init();
 animate();
@@ -185,10 +186,10 @@ function init() {
   // camera0: ortho camera
   
   scene0 = new THREE.Scene();
-  var subject = new THREE.Mesh (new THREE.TeapotBufferGeometry(10),
+  subject = new THREE.Mesh (new THREE.TeapotBufferGeometry(10),
   	teapotMaterial);
   scene0.add (subject);
-  camera0 = new THREE.OrthographicCamera (-20,20,20,-20,-10,100);
+  camera0 = new THREE.OrthographicCamera (-20,20,20,-20,-100,100);
     
   ////////////////////////////////////////////////////////
 
@@ -213,7 +214,7 @@ function init() {
 
   // sceneRTT: contains a plane to draw the outline  
   sceneRTT = new THREE.Scene();
-  cameraRTT = new THREE.OrthographicCamera(-50, 50, 50, -50, -10, 10);
+  cameraRTT = new THREE.OrthographicCamera(-50, 50, 50, -50, -100, 100);
   var bs = new THREE.Mesh(new THREE.PlaneGeometry(100,100), material_shh);
   sceneRTT.add(bs);
   
@@ -221,7 +222,7 @@ function init() {
   // sceneRegular: contains the torusKnot with PhongMaterial
   // and all lights to light up the torusKnot
   sceneRegular = new THREE.Scene();
-  var subjectClone = subject.clone();
+  subjectClone = subject.clone();
  // subjectClone.material = new THREE.MeshPhongMaterial();
   sceneRegular.add(subjectClone);
   
@@ -265,6 +266,16 @@ function animate() {
 
   requestAnimationFrame(animate);
   pointLight.position.set (40*Math.cos(angle), 100, 40*Math.sin(angle));
+  
+  var point = camera.position.clone().sub(subject.position).projectOnPlane(new THREE.Vector3(0,1,0));
+  var angle0 = point.angleTo(new THREE.Vector3(0,0,1));
+  var whirl = new THREE.Vector3();
+  
+  if(whirl.crossVectors(new THREE.Vector3(0,0,1),point).dot(new THREE.Vector3(0,1,0)) < 0) angle0 = -angle0;
+ 
+  subject.rotation.y = angle0;
+  subjectClone.rotation.y = angle0;
+  
   
   teapotMaterial.uniforms.lightpos.value.copy(pointLight.position);
   // this value can alter the width of silhouette !!
