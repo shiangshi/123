@@ -228,8 +228,8 @@ function init() {
 
   let loader = new THREE.TextureLoader();
   loader.crossOrigin = '';
-  let mickeys = '/image/pic.png';
-  let texture = loader.load(mickeys, function (tex) {
+  let pic = 'image/pic.png';
+  let texture = loader.load(pic, function (tex) {
     texture.wrapS = THREE.RepeatWrapping;
   	console.log (tex.image.width + ', ' + tex.image.height);
   	shaderMaterial1.uniforms.texture.value= tex;
