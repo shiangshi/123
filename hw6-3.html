@@ -33,6 +33,7 @@ body {
 <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
 <script src="https://raw.githack.com/mrdoob/three.js/dev/examples/js/geometries/TeapotBufferGeometry.js"></script>
 <script src="https://raw.githack.com/mrdoob/three.js/master/examples/js/utils/BufferGeometryUtils.js"></script>
+<script src="https://raw.githack.com/jyunming-chen/tutsplus/master/js/text2D.js"></script>
 
 <script id="myVertexShader-mono" type="x-shader/x-vertex">
   varying vec2 vUv; 
@@ -167,6 +168,7 @@ var scene, renderer, camera;
 var light, light2, angle=0;
 var shaderMaterial,shaderMaterial1;
 var which = 0;
+var today,h,m,s;
 
 init();
 animate();
@@ -221,6 +223,22 @@ function init() {
   cub2.position.set(0,100,500);
   var cub3 = new THREE.Mesh(new THREE.BoxGeometry(10,200,600),new THREE.MeshLambertMaterial({color: 'white'}));
   cub3.position.set(-300,100,200);
+  
+  ////////////////////////////////////////////////////////////////////////
+  var Text2D = THREE_Text.MeshText2D;
+  var SpriteText2D = THREE_Text.SpriteText2D;
+  var textAlign = THREE_Text.textAlign;
+
+  
+  text = new Text2D("HAPPY NEW YEAR", {
+	align: textAlign.center,
+  //font: '20px Arial',
+	font: '20px Times',
+    fillStyle: "rgb(200,100,200)",
+    antialias: false
+  });
+  text.position.set(0, 70, 0);
+  text.scale.set(.5, .5, .5);
   
   ////////////////////////////////////////////////////////////////////////
   var picGeometry = new THREE.PlaneBufferGeometry( 50,50 );
@@ -309,7 +327,7 @@ function init() {
   light.position.set( 50, 50, 50 );
   light2 = new THREE.PointLight( 0xffffff, 1);
   
-  sceneColor.add (light);
+  sceneColor.add (light,text);
   sceneColor.add (new THREE.PointLightHelper (light,5))
   sceneGrey.add (light2);
   
@@ -394,6 +412,12 @@ function buildTable(){
 function animate() {
   angle += 0.01;
   requestAnimationFrame(animate);
+  
+  today = new Date();
+  h = today.getHours();
+  m = today.getMinutes();
+  s = today.getSeconds();
+  
   light.position.set (100*Math.cos(angle), 200, 100*Math.sin(angle));
   light2.copy (light);
   
@@ -411,6 +435,8 @@ function animate() {
   });
   
   renderer.render(sceneGrey, camera);
+  
+  text.text = "HAPPY NEW YEAR  " + h + " : " + m + " : " + s;
 
   // switch to screen output    
   renderer.setRenderTarget (null);
